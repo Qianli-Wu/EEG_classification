@@ -8,7 +8,8 @@ from keras_model import hybrid_cnn_lstm_model
 
 def keras_cnn_lstm(args):
 
-    x_train, x_valid, x_test, y_train, y_valid, y_test = load_data()
+    print(f'learning_rate: {args.learning_rate}')
+    x_train, x_valid, x_test, y_train, y_valid, y_test = load_data(onehot=True)
 
 
     # Model parameters
@@ -29,7 +30,7 @@ def keras_cnn_lstm(args):
                 epochs=epochs,
                 validation_data=(x_valid, y_valid), verbose=True)
 
-    data = [["EEG", str(args.run), str(args.epoch), str(args.learning_rate)]]
+    data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(hybrid_cnn_lstm_model_results.history['val_accuracy'][-1])]]
 
     with open('testData.csv', "a") as file:
         writer = csv.writer(file)
@@ -39,13 +40,23 @@ def keras_cnn_lstm(args):
     return hybrid_cnn_lstm_model_results.history['val_accuracy'][-1]
 
 
+def torch_cnn_lstm(args):
+
+    print(f'learning_rate: {args.learning_rate}')
+    x_train, x_valid, x_test, y_train, y_valid, y_test = load_data(onehot=False)
+    # Model parameters
+    # learning_rate = args.learning_rate
+    # epochs = args.epoch
+    # criterion = nn.CrossEntropyLoss()
+    # optimizer = optim.Adam(model.parameters(), lr=0.001
+
 def optuna_objective(trail):
 
-    epochs = trail.suggest_int("epochs", 40, 500, 5)
-    learning_rate = trail.suggest_float("learning_rates", 1e-6, 0.3)
+    epochs = trail.suggest_int("epochs", 45, 55, 5)
+    learning_rate = trail.suggest_float("learning_rates", 9e-4, 1e-3)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--run', dest='runs', type=int, default=1)
+    parser.add_argument('--runs', dest='runs', type=int, default=1)
     parser.add_argument('--epoch', dest='epoch', type=int, default=epochs)
     parser.add_argument('--learning_rate', type=float, default=learning_rate)
 

@@ -6,7 +6,7 @@ import csv
 import matplotlib.pyplot as plt
 from data_preprocess import load_data
 from keras_model import hybrid_cnn_lstm_model
-from bayes_optuna import optimizer_optuna
+from bayes_optuna_keras import optimizer_optuna
 
 
 

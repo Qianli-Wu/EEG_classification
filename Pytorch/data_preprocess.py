@@ -1,6 +1,18 @@
 import numpy as np
-from keras.utils import to_categorical
+from torch.utils.data import Dataset
 
+
+# Define your dataset class
+class EEGDataset(Dataset):
+    def __init__(self, X, y):
+        self.X = X
+        self.y = y
+
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.y[idx]
 
 def data_prep(X,y,sub_sample,average,noise):
     
@@ -106,18 +118,19 @@ def load_data(debug = False, onehot=False):
         print('Shape of validation set after adding width info:',x_valid.shape)
         print('Shape of test set after adding width info:',x_test.shape)
 
-
-    # Reshaping the training and validation dataset
-    x_train = np.swapaxes(x_train, 1,3)
-    x_train = np.swapaxes(x_train, 1,2)
-    x_valid = np.swapaxes(x_valid, 1,3)
-    x_valid = np.swapaxes(x_valid, 1,2)
-    x_test = np.swapaxes(x_test, 1,3)
-    x_test = np.swapaxes(x_test, 1,2)
-    if debug:
-        print('Shape of training set after dimension reshaping:',x_train.shape)
-        print('Shape of validation set after dimension reshaping:',x_valid.shape)
-        print('Shape of test set after dimension reshaping:',x_test.shape)
+    # N, C, H, W
+    if onehot:
+        # Reshaping the training and validation dataset
+        x_train = np.swapaxes(x_train, 1,3)
+        x_train = np.swapaxes(x_train, 1,2)
+        x_valid = np.swapaxes(x_valid, 1,3)
+        x_valid = np.swapaxes(x_valid, 1,2)
+        x_test = np.swapaxes(x_test, 1,3)
+        x_test = np.swapaxes(x_test, 1,2)
+        if debug:
+            print('Shape of training set after dimension reshaping:',x_train.shape)
+            print('Shape of validation set after dimension reshaping:',x_valid.shape)
+            print('Shape of test set after dimension reshaping:',x_test.shape)
 
     return x_train, x_valid, x_test, y_train, y_valid, y_test
 
