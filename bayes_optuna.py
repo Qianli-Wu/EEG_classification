@@ -3,10 +3,10 @@ import argparse
 import keras
 import csv
 from data_preprocess import load_data
-from keras_model import hybrid_cnn_lstm_model, create_cnn_transformer_model
+from keras_model import hybrid_cnn_lstm_model, create_cnn_transformer_model, transformer_model
 
 
-def keras_cnn_lstm(args):
+def keras_train(args, csv=False):
 
     print(f'learning_rate: {args.learning_rate}')
     x_train, x_valid, x_test, y_train, y_valid, y_test = load_data(onehot=True)
@@ -15,31 +15,40 @@ def keras_cnn_lstm(args):
     # Model parameters
     learning_rate = args.learning_rate
     epochs = args.epoch
+    num_heads = args.num_heads
     hybrid_cnn_lstm_optimizer = keras.optimizers.Adam(lr=learning_rate)
 
+    model = create_cnn_transformer_model(num_heads=num_heads)
+    # model = transformer_model()
+    # model = hybrid_cnn_lstm_model
+
+    model.summary()
 
     # Compiling the model
-    hybrid_cnn_lstm_model.compile(loss='categorical_crossentropy',
+    model.compile(loss='categorical_crossentropy',
                     optimizer=hybrid_cnn_lstm_optimizer,
                     metrics=['accuracy'])
 
     # Training and validating the model
-    hybrid_cnn_lstm_model_results = hybrid_cnn_lstm_model.fit(x_train,
+    results = model.fit(x_train,
                 y_train,
-                batch_size=256,
+                batch_size=64,
                 epochs=epochs,
                 validation_data=(x_valid, y_valid), verbose=True)
+    if csv: 
+        data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(results.history['val_accuracy'][-1])]]
 
-    data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(hybrid_cnn_lstm_model_results.history['val_accuracy'][-1])]]
+        with open('testData.csv', "a") as file:
+            writer = csv.writer(file)
+            writer.writerows(data)
+            print("write succeed")
 
-    with open('testData.csv', "a") as file:
-        writer = csv.writer(file)
-        writer.writerows(data)
-        print("write succeed")
+    cnn_score = model.evaluate(x_test, y_test, verbose=0)  # TODO: delete this line before submitting
+    print('Test accuracy of the CNN + Transformer model:',cnn_score[1])
 
-    return hybrid_cnn_lstm_model_results.history['val_accuracy'][-1]
+    return results.history['val_accuracy'][-1]
 
-def keras_cnn_transformer(args):
+def keras_cnn_transformer(args, csv=False):
 
     print(f'learning_rate: {args.learning_rate}')
     x_train, x_valid, x_test, y_train, y_valid, y_test = load_data(onehot=True)
@@ -68,14 +77,15 @@ def keras_cnn_transformer(args):
                 epochs=epochs,
                 validation_data=(x_valid, y_valid), verbose=True)
 
-    data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(hybrid_cnn_transformer_model_results.history['val_accuracy'][-1])]]
+    if csv:
+        data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(hybrid_cnn_transformer_model_results.history['val_accuracy'][-1])]]
 
-    with open('testData.csv', "a") as file:
-        writer = csv.writer(file)
-        writer.writerows(data)
-        print("write succeed")
+        with open('testData.csv', "a") as file:
+            writer = csv.writer(file)
+            writer.writerows(data)
+            print("write succeed")
 
-    cnn_score = hybird_cnn_transformer_model.evaluate(x_test, y_test, verbose=0)
+    cnn_score = hybird_cnn_transformer_model.evaluate(x_test, y_test, verbose=0)  # TODO: delete this line before submitting
     print('Test accuracy of the CNN + Transformer model:',cnn_score[1])
 
     return hybrid_cnn_transformer_model_results.history['val_accuracy'][-1]
@@ -92,12 +102,8 @@ def optuna_objective(trail):
 
     args = parser.parse_args()
 
-    val_accuracy = keras_cnn_lstm(args)
+    val_accuracy = keras_train(args)
     return val_accuracy
-
-
-
-
 
 def optimizer_optuna(n_trials, algo):
     # 定义使用TPE或者GP
@@ -129,3 +135,16 @@ def optimizer_optuna(n_trials, algo):
 
     return study.best_trial.params, study.best_trial.values
 
+
+
+if __name__ == "__main__":
+
+    # open file to store the data
+    header = ["Dataset", "Run", "Epoch", "Learning_Rate"]
+    with open("testData.csv", "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(header)
+
+    # Use optuna to tune hyperparameters
+    best_params, best_score = optimizer_optuna(10, "TPE")
+    print(best_params, best_score)

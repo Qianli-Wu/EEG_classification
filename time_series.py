@@ -121,13 +121,13 @@ if __name__ == '__main__':
 
 
     # Model parameters
-    learning_rate = 1e-2
+    learning_rate = 1e-3
     epochs = 50
     cnn_optimizer = keras.optimizers.Adam(lr=learning_rate)
 
 
     accuracies = []
-    for time in range(200,1001,200):
+    for time in range(100,1001,100):
         ## Random splitting and reshaping the data
         # First generating the training and validation indices using random splitting
         ind_valid = np.random.choice(2115, 375, replace=False)
