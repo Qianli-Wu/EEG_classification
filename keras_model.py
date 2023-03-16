@@ -48,37 +48,69 @@ hybrid_cnn_lstm_model.add(Dense(4, activation='softmax')) # Output FC layer with
 
 
 
+def CNN_model(time):
+    # Building the CNN model using sequential class
+    basic_cnn_model = Sequential()
 
-# Building the CNN model using sequential class
-cnn_model = Sequential()
+    # Conv. block 1
+    basic_cnn_model.add(Conv2D(filters=25, kernel_size=(10,1), padding='same', activation='elu', input_shape=(int(time/2),1,22)))
+    basic_cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same')) # Read the keras documentation
+    basic_cnn_model.add(BatchNormalization())
+    basic_cnn_model.add(Dropout(0.5))
 
-# Conv. block 1
-cnn_model.add(Conv2D(filters=25, kernel_size=(10,1), padding='same', activation='elu', input_shape=(250,1,22)))
-cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same')) # Read the keras documentation
-cnn_model.add(BatchNormalization())
-cnn_model.add(Dropout(0.5))
+    # Conv. block 2
+    basic_cnn_model.add(Conv2D(filters=50, kernel_size=(10,1), padding='same', activation='elu'))
+    basic_cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
+    basic_cnn_model.add(BatchNormalization())
+    basic_cnn_model.add(Dropout(0.5))
 
-# Conv. block 2
-cnn_model.add(Conv2D(filters=50, kernel_size=(10,1), padding='same', activation='elu'))
-cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
-cnn_model.add(BatchNormalization())
-cnn_model.add(Dropout(0.5))
+    # Conv. block 3
+    basic_cnn_model.add(Conv2D(filters=100, kernel_size=(10,1), padding='same', activation='elu'))
+    basic_cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
+    basic_cnn_model.add(BatchNormalization())
+    basic_cnn_model.add(Dropout(0.5))
 
-# Conv. block 3
-cnn_model.add(Conv2D(filters=100, kernel_size=(10,1), padding='same', activation='elu'))
-cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
-cnn_model.add(BatchNormalization())
-cnn_model.add(Dropout(0.5))
+    # Conv. block 4
+    basic_cnn_model.add(Conv2D(filters=200, kernel_size=(10,1), padding='same', activation='elu'))
+    basic_cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
+    basic_cnn_model.add(BatchNormalization())
+    basic_cnn_model.add(Dropout(0.5))
 
-# Conv. block 4
-cnn_model.add(Conv2D(filters=200, kernel_size=(10,1), padding='same', activation='elu'))
-cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
-cnn_model.add(BatchNormalization())
-cnn_model.add(Dropout(0.5))
+    # Output layer with Softmax activation
+    basic_cnn_model.add(Flatten()) # Flattens the input
+    basic_cnn_model.add(Dense(4, activation='softmax')) # Output FC layer with softmax activation
 
-# Output layer with Softmax activation 
-cnn_model.add(Flatten()) # Adding a flattening operation to the output of CNN block
-cnn_model.add(Dense(4, activation='softmax')) # Output FC layer with softmax activation
+    return basic_cnn_model
+# # Building the CNN model using sequential class
+# cnn_model = Sequential()
+
+# # Conv. block 1
+# cnn_model.add(Conv2D(filters=25, kernel_size=(10,1), padding='same', activation='elu', input_shape=(250,1,22)))
+# cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same')) # Read the keras documentation
+# cnn_model.add(BatchNormalization())
+# cnn_model.add(Dropout(0.5))
+
+# # Conv. block 2
+# cnn_model.add(Conv2D(filters=50, kernel_size=(10,1), padding='same', activation='elu'))
+# cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
+# cnn_model.add(BatchNormalization())
+# cnn_model.add(Dropout(0.5))
+
+# # Conv. block 3
+# cnn_model.add(Conv2D(filters=100, kernel_size=(10,1), padding='same', activation='elu'))
+# cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
+# cnn_model.add(BatchNormalization())
+# cnn_model.add(Dropout(0.5))
+
+# # Conv. block 4
+# cnn_model.add(Conv2D(filters=200, kernel_size=(10,1), padding='same', activation='elu'))
+# cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
+# cnn_model.add(BatchNormalization())
+# cnn_model.add(Dropout(0.5))
+
+# # Output layer with Softmax activation 
+# cnn_model.add(Flatten()) # Adding a flattening operation to the output of CNN block
+# cnn_model.add(Dense(4, activation='softmax')) # Output FC layer with softmax activation
 
 
 # Printing the model summary

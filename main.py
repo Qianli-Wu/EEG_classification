@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from data_preprocess import load_data
 from keras_model import hybrid_cnn_lstm_model
 from bayes_optuna import optimizer_optuna, keras_cnn_transformer
+from time_series import time_series
 
 
 
@@ -20,6 +21,7 @@ if __name__ == "__main__":
     # best_params, best_score = optimizer_optuna(10, "TPE")
     # print(best_params, best_score)
 
+# ================================================================
     epochs = 100
     learning_rate = 3e-4
     num_heads = 2
@@ -32,6 +34,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    keras_cnn_transformer(args)
+    # keras_cnn_transformer(args)
+# ================================================================
+    time_series(args)
 
 
