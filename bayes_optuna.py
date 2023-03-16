@@ -3,7 +3,7 @@ import argparse
 import keras
 import csv
 from data_preprocess import load_data
-from keras_model import hybrid_cnn_lstm_model
+from keras_model import hybrid_cnn_lstm_model, create_cnn_transformer_model
 
 
 def keras_cnn_lstm(args):
@@ -26,7 +26,7 @@ def keras_cnn_lstm(args):
     # Training and validating the model
     hybrid_cnn_lstm_model_results = hybrid_cnn_lstm_model.fit(x_train,
                 y_train,
-                batch_size=64,
+                batch_size=256,
                 epochs=epochs,
                 validation_data=(x_valid, y_valid), verbose=True)
 
@@ -39,16 +39,46 @@ def keras_cnn_lstm(args):
 
     return hybrid_cnn_lstm_model_results.history['val_accuracy'][-1]
 
-
-def torch_cnn_lstm(args):
+def keras_cnn_transformer(args):
 
     print(f'learning_rate: {args.learning_rate}')
-    x_train, x_valid, x_test, y_train, y_valid, y_test = load_data(onehot=False)
+    x_train, x_valid, x_test, y_train, y_valid, y_test = load_data(onehot=True)
+
+
     # Model parameters
-    # learning_rate = args.learning_rate
-    # epochs = args.epoch
-    # criterion = nn.CrossEntropyLoss()
-    # optimizer = optim.Adam(model.parameters(), lr=0.001
+    learning_rate = args.learning_rate
+    epochs = args.epoch
+    num_heads = args.num_heads
+    hybrid_cnn_transformer_optimizer = keras.optimizers.Adam(lr=learning_rate)
+
+    hybird_cnn_transformer_model = create_cnn_transformer_model(num_heads=num_heads)
+    # Print the model summary
+    hybird_cnn_transformer_model.summary()
+
+
+    # Compiling the model
+    hybird_cnn_transformer_model.compile(loss='categorical_crossentropy',
+                    optimizer=hybrid_cnn_transformer_optimizer,
+                    metrics=['accuracy'])
+
+    # Training and validating the model
+    hybrid_cnn_transformer_model_results = hybird_cnn_transformer_model.fit(x_train,
+                y_train,
+                batch_size=64,
+                epochs=epochs,
+                validation_data=(x_valid, y_valid), verbose=True)
+
+    data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(hybrid_cnn_transformer_model_results.history['val_accuracy'][-1])]]
+
+    with open('testData.csv', "a") as file:
+        writer = csv.writer(file)
+        writer.writerows(data)
+        print("write succeed")
+
+    cnn_score = hybird_cnn_transformer_model.evaluate(x_test, y_test, verbose=0)
+    print('Test accuracy of the CNN + Transformer model:',cnn_score[1])
+
+    return hybrid_cnn_transformer_model_results.history['val_accuracy'][-1]
 
 def optuna_objective(trail):
 
@@ -73,12 +103,12 @@ def optimizer_optuna(n_trials, algo):
     # 定义使用TPE或者GP
     if algo == "TPE":
         algo = optuna.samplers.TPESampler(n_startup_trials=10, n_ei_candidates=24)
-    elif algo == "GP":
-        from optuna.integration import SkoptSampler
-        import skopt
-        algo = SkoptSampler(skopt_kwargs={'base_estimator': 'GP',  # 选择高斯过程
-                                          'n_initial_points': 10,  # 初始观测点10个
-                                          'acq_func': 'EI'})  # 选择的采集函数为EI，期望增量
+    # elif algo == "GP":
+    #     from optuna.integration import SkoptSampler
+    #     import skopt
+    #     algo = SkoptSampler(skopt_kwargs={'base_estimator': 'GP',  # 选择高斯过程
+    #                                       'n_initial_points': 10,  # 初始观测点10个
+    #                                       'acq_func': 'EI'})  # 选择的采集函数为EI，期望增量
 
     # 实际优化过程，首先实例化优化器
     study = optuna.create_study(sampler=algo  # 要使用的具体算法
