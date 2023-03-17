@@ -23,15 +23,23 @@ if __name__ == "__main__":
     epochs = 200
     learning_rate = 4e-4
     num_heads = 2
+    patience = 10
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--runs', dest='runs', type=int, default=1)
     parser.add_argument('--epoch', dest='epoch', type=int, default=epochs)
     parser.add_argument('--learning_rate', type=float, default=learning_rate)
     parser.add_argument('--num_heads', type=int, default=num_heads)
+    parser.add_argument('--patience', type=int, default=patience)
 
     args = parser.parse_args()
 
-    keras_train(args)
+    acc = []
+    runs = 1
+    for i in range(runs):
+        acc.append(keras_train(args))
+
+    print(acc)
+    print(np.mean(acc))
 
 

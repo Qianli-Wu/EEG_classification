@@ -119,6 +119,8 @@ def load_data(debug = False, onehot=False):
         print('Shape of validation set after dimension reshaping:',x_valid.shape)
         print('Shape of test set after dimension reshaping:',x_test.shape)
 
-    return x_train, x_valid, x_test, y_train, y_valid, y_test
+    person = np.vstack((person_test,person_test, person_test,person_test))
+
+    return x_train, x_valid, x_test, y_train, y_valid, y_test, person
 
 

@@ -9,14 +9,17 @@ from keras_model import hybrid_cnn_lstm_model, create_cnn_transformer_model, tra
 def keras_train(args, csv=False):
 
     print(f'learning_rate: {args.learning_rate}')
-    x_train, x_valid, x_test, y_train, y_valid, y_test = load_data(onehot=True)
+    x_train, x_valid, x_test, y_train, y_valid, y_test, person = load_data(onehot=True)
 
 
     # Model parameters
     learning_rate = args.learning_rate
     epochs = args.epoch
     num_heads = args.num_heads
+    patience = args.patience
     hybrid_cnn_lstm_optimizer = keras.optimizers.Adam(lr=learning_rate)
+
+    callback = keras.callbacks.EarlyStopping(monitor='loss', patience=patience, restore_best_weights=True)
 
     model = create_cnn_transformer_model(num_heads=num_heads)
     # model = transformer_model()
@@ -34,6 +37,7 @@ def keras_train(args, csv=False):
                 y_train,
                 batch_size=64,
                 epochs=epochs,
+                callbacks=[callback],
                 validation_data=(x_valid, y_valid), verbose=True)
     if csv: 
         data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(results.history['val_accuracy'][-1])]]
@@ -43,8 +47,12 @@ def keras_train(args, csv=False):
             writer.writerows(data)
             print("write succeed")
 
-    cnn_score = model.evaluate(x_test, y_test, verbose=0)  # TODO: delete this line before submitting
-    print('Test accuracy of the CNN + Transformer model:',cnn_score[1])
+    for subject in range(9):
+        condition = person[:,0] == subject
+        subject_y_test = y_test[condition]
+        subject_x_test = x_test[condition]
+        cnn_score = model.evaluate(subject_x_test, subject_y_test, verbose=True)  # TODO: delete this line before submitting
+        print(f'Test accuracy of the subject {subject}: {cnn_score[1]}')
 
     return results.history['val_accuracy'][-1]
 

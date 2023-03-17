@@ -104,18 +104,18 @@ def create_cnn_transformer_model(num_heads=2, input_shape=(250, 1, 22), num_clas
     x = Dropout(0.5)(x)
 
 
-    # CNN layer 3
-    x = Conv2D(filters=100, kernel_size=(10,1), padding='same', activation='elu')(x)
-    x = MaxPooling2D(pool_size=(3,1), padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.5)(x)
+    # # CNN layer 3
+    # x = Conv2D(filters=100, kernel_size=(10,1), padding='same', activation='elu')(x)
+    # x = MaxPooling2D(pool_size=(3,1), padding='same')(x)
+    # x = BatchNormalization()(x)
+    # x = Dropout(0.5)(x)
 
 
-    # CNN layer 4
-    x = Conv2D(filters=200, kernel_size=(10,1), padding='same', activation='elu')(x)
-    x = MaxPooling2D(pool_size=(3,1), padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.5)(x)
+    # # CNN layer 4
+    # x = Conv2D(filters=200, kernel_size=(10,1), padding='same', activation='elu')(x)
+    # x = MaxPooling2D(pool_size=(3,1), padding='same')(x)
+    # x = BatchNormalization()(x)
+    # x = Dropout(0.5)(x)
 
 
     # Prepare the data for the Transformer
@@ -124,17 +124,7 @@ def create_cnn_transformer_model(num_heads=2, input_shape=(250, 1, 22), num_clas
 
     # Transformer layer 1
     d_model = x.shape[-1]
-
     x = transformer_encoder(x, d_model, num_heads, ff_dim, dropout)
-    # x = MultiHeadAttention(num_heads=num_heads, key_dim=d_model)(x, x)
-    # x = LayerNormalization()(x)
-
-    # # Transformer layer 2
-    # x = MultiHeadAttention(num_heads=num_heads, key_dim=d_model)(x, x)
-    # x = LayerNormalization()(x)
-
-    # Classification head
-    # x = GlobalAveragePooling1D()(x)
     x = Flatten()(x)
     outputs = Dense(num_classes, activation='softmax')(x)
 
