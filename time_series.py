@@ -151,7 +151,7 @@ if __name__ == '__main__':
                     y_train_set,
                     batch_size=64,
                     epochs=epochs,
-                    validation_data=(X_valid_set, y_valid_set), verbose=False)
+                    validation_data=(X_valid_set, y_valid_set), verbose=1)
         
         cnn_score = basic_cnn_model.evaluate(X_test_set, y_test_set, verbose=0)
         accuracies.append(cnn_score[1])
