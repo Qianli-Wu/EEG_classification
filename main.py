@@ -7,6 +7,7 @@ from data_preprocess import load_data
 from keras_model import hybrid_cnn_lstm_model
 from time_series import time_series
 from bayes_optuna import optimizer_optuna, keras_cnn_transformer, keras_train
+from RNN import test_RNN_model
 
 
 
@@ -35,7 +36,8 @@ if __name__ == "__main__":
 
     # keras_cnn_transformer(args)
 # ================================================================
-    # time_series(args)
-    keras_train(args)
+    #time_series(args)
+    #keras_train(args)
+    test_RNN_model(args)
 
 
