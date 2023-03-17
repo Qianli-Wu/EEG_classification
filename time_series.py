@@ -1,7 +1,7 @@
 import numpy as np
 import keras
 from keras.utils import to_categorical
-from keras_model import CNN_model
+from keras_model import CNN_model, create_cnn_transformer_model
 from data_preprocess import load_data
 
 accuracies = []
@@ -121,13 +121,13 @@ if __name__ == '__main__':
 
 
     # Model parameters
-    learning_rate = 1e-3
-    epochs = 50
+    learning_rate = 4e-4
+    epochs = 200
     cnn_optimizer = keras.optimizers.Adam(lr=learning_rate)
 
 
     accuracies = []
-    for time in range(100,1001,100):
+    for time in range(300,1001,50):
         ## Random splitting and reshaping the data
         # First generating the training and validation indices using random splitting
         ind_valid = np.random.choice(2115, 375, replace=False)
@@ -140,7 +140,8 @@ if __name__ == '__main__':
         X_train_set, y_train_set, X_valid_set, y_valid_set, X_test_set, y_test_set = \
                         data_processing(X_train, y_train, X_valid, y_valid, X_test, y_test, time)
         
-        basic_cnn_model = CNN_model(time)
+        # basic_cnn_model = CNN_model(time)
+        basic_cnn_model = create_cnn_transformer_model(input_shape=(int(time/2), 1, 22), time=time)
         # Compiling the model
         basic_cnn_model.compile(loss='categorical_crossentropy',
                         optimizer=cnn_optimizer,
