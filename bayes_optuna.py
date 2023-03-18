@@ -18,7 +18,7 @@ def ensemble_predictions(models, X_test):
 
     # Majority vote
     predictions = np.array(predictions)
-    final_predictions = stats.mode(predictions, axis=0)[0]
+    final_predictions = stats.mode(predictions, axis=0, keepdims=False)[0]
 
     return final_predictions
 
@@ -36,11 +36,11 @@ def keras_train(args, csv=False):
     patience = args.patience           # Early Stopping
     num_models = args.ensemble
     optimizer = keras.optimizers.Adam(lr=learning_rate)
-    callback = keras.callbacks.EarlyStopping(monitor='loss', patience=patience, restore_best_weights=True)
 
 
     models = []
 
+    # Train multiple models
     for i in range(num_models):
         # Sadly, it's Python3.9, which does not support Structural Pattern Matching
         if model_type == 'cnn+transformer':
@@ -51,6 +51,8 @@ def keras_train(args, csv=False):
             model = transformer_model()
         elif model_type == 'cnn':
             model = cnn_model(num_cnn_layer=args.cnn_layers)
+        else:
+            model = cnn_transformer_model(num_cnn_layer=args.cnn_layers, filters=25, num_heads=num_heads)
 
         model.summary()
 
@@ -59,8 +61,9 @@ def keras_train(args, csv=False):
                         optimizer=optimizer,
                         metrics=['accuracy'])
         
-        # Add Checkpoint
+        # Add Callbacks: Checkpoint and EarlyStopping
         checkpoint = ModelCheckpoint(f'model_{i}.h5', save_best_only=True)
+        callback = keras.callbacks.EarlyStopping(monitor='loss', patience=patience, restore_best_weights=True)
 
 
         # Training and validating the model
@@ -72,23 +75,28 @@ def keras_train(args, csv=False):
                     validation_data=(x_valid, y_valid), verbose=True)
         models.append(model)
 
-    final_predictions = np.array(ensemble_predictions(models, x_test))
-    # print(final_predictions)
-    norml_y_test = np.reshape(np.argmax(y_test, axis=1), (1, -1))
-    # print(norml_y_test)
-    # accuracy = accuracy_score(np.reshape(np.argmax(y_test, axis=1), (1, -1)), final_predictions)
-    accuracy = (np.sum(final_predictions == norml_y_test) / y_test.shape[0])
-    print(f"Ensemble accuracy: {accuracy:.2%}")
-    return accuracy
+
+    
+    # Model(s) Evaluation
+    if num_models > 1:  # Ensemble Accuracy
+        final_predictions = np.array(ensemble_predictions(models, x_test))  # 1772 x 1
+        norml_y_test = np.reshape(np.argmax(y_test, axis=1), (1, -1))
+        # accuracy = accuracy_score(np.reshape(np.argmax(y_test, axis=1), (1, -1)), final_predictions)
+        accuracy = (np.sum(final_predictions == norml_y_test) / y_test.shape[0])
+        subject_score = ensemble_subject_evaluate(models, x_test=x_test, y_test=y_test, person=person)
+        print(f"Ensemble accuracy: {accuracy:.2%}")
+    else:  # Single Model Accuracy
+        accuracy = model.evaluate(x_test, y_test, verbose=0)
+        subject_score = subject_evaluate(model, x_test=x_test, y_test=y_test, person=person)
+        print(f"Model accuracy: {accuracy:.2%}")
+
 
     if csv: 
-        data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(results.history['val_accuracy'][-1])]]
+        data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(accuracy), *subject_score]]
         with open('testData.csv', "a") as file:
             writer = csv.writer(file)
             writer.writerows(data)
             print("write succeed")
-
-    subject_score = subject_evaluate(model, x_test=x_test, y_test=y_test, person=person)
 
     print("==== subjects =====")
     print(subject_score)
@@ -110,6 +118,24 @@ def subject_evaluate(model, x_test, y_test, person, verbose=False):
         cnn_score = model.evaluate(subject_x_test, subject_y_test, verbose=verbose)  # TODO: delete this line before submitting
         subject_score.append(cnn_score[1])
         if verbose: print(f'Test accuracy of the subject {subject}: {cnn_score[1]}')
+
+    return subject_score
+
+def ensemble_subject_evaluate(models, x_test, y_test, person, verbose=False):
+    '''
+    Evaluate the ensembling models on each 9 subjects
+    person contains subject label of each data in y_test
+    '''
+    subject_score = []
+    for subject in np.unique(person).tolist():
+        condition = person[:,0] == subject
+        subject_y_test = y_test[condition]
+        subject_x_test = x_test[condition]
+        final_predictions = np.array(ensemble_predictions(models, subject_x_test))
+        norml_y_test = np.reshape(np.argmax(subject_y_test, axis=1), (1, -1))
+        accuracy = (np.sum(final_predictions == norml_y_test) / final_predictions.shape[0])
+        subject_score.append(accuracy)
+        if verbose: print(f'Test accuracy of the subject {subject}: {accuracy}')
 
     return subject_score
 

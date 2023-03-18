@@ -2,13 +2,13 @@ import numpy as np
 from keras.utils import to_categorical
 
 
-def data_prep(X,y,sub_sample,average,noise):
+def data_prep(X,y,sub_sample,average,noise,time=500):
     
     total_X = None
     total_y = None
     
     # Trimming the data (sample,22,1000) -> (sample,22,500)
-    X = X[:,:,0:500]
+    X = X[:,:,0:time]
     # print('Shape of X after trimming:',X.shape)
     
     # Maxpooling the data (sample,22,1000) -> (sample,22,500/sub_sample)

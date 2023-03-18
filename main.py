@@ -5,6 +5,7 @@ import csv
 import matplotlib.pyplot as plt
 from data_preprocess import load_data
 from bayes_optuna import optimizer_optuna, keras_cnn_transformer, keras_train
+from RNN import test_RNN_model
 
 
 
