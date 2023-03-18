@@ -2,9 +2,25 @@ import optuna
 import argparse
 import keras
 import csv
+import numpy as np
+from scipy import stats
+from sklearn.metrics import accuracy_score
+from keras.callbacks import ModelCheckpoint
 from data_preprocess import load_data
-from keras_model import hybrid_cnn_lstm_model, create_cnn_transformer_model, transformer_model
+from keras_model import create_cnn_transformer_model, transformer_model, cnn_transformer_model, cnn_rnn_model, cnn_model
 
+def ensemble_predictions(models, X_test):
+    predictions = []
+    for model in models:
+        y_pred = model.predict(X_test)
+        y_pred_classes = np.argmax(y_pred, axis=1)
+        predictions.append(y_pred_classes)
+
+    # Majority vote
+    predictions = np.array(predictions)
+    final_predictions = stats.mode(predictions, axis=0)[0]
+
+    return final_predictions
 
 def keras_train(args, csv=False):
 
@@ -13,48 +29,91 @@ def keras_train(args, csv=False):
 
 
     # Model parameters
+    model_type = args.model
     learning_rate = args.learning_rate
     epochs = args.epoch
-    num_heads = args.num_heads
-    patience = args.patience
-    hybrid_cnn_lstm_optimizer = keras.optimizers.Adam(lr=learning_rate)
-
+    num_heads = args.num_heads         # Transformer
+    patience = args.patience           # Early Stopping
+    num_models = args.ensemble
+    optimizer = keras.optimizers.Adam(lr=learning_rate)
     callback = keras.callbacks.EarlyStopping(monitor='loss', patience=patience, restore_best_weights=True)
 
-    model = create_cnn_transformer_model(num_heads=num_heads)
-    # model = transformer_model()
-    # model = hybrid_cnn_lstm_model
 
-    model.summary()
+    models = []
 
-    # Compiling the model
-    model.compile(loss='categorical_crossentropy',
-                    optimizer=hybrid_cnn_lstm_optimizer,
-                    metrics=['accuracy'])
+    for i in range(num_models):
+        # Sadly, it's Python3.9, which does not support Structural Pattern Matching
+        if model_type == 'cnn+transformer':
+            model = cnn_transformer_model(num_cnn_layer=args.cnn_layers, filters=25, num_heads=num_heads)
+        elif model_type == 'cnn+rnn':
+            model = cnn_rnn_model()
+        elif model_type == 'transformer':
+            model = transformer_model()
+        elif model_type == 'cnn':
+            model = cnn_model(num_cnn_layer=args.cnn_layers)
 
-    # Training and validating the model
-    results = model.fit(x_train,
-                y_train,
-                batch_size=64,
-                epochs=epochs,
-                callbacks=[callback],
-                validation_data=(x_valid, y_valid), verbose=True)
+        model.summary()
+
+        # Compiling the model
+        model.compile(loss='categorical_crossentropy',
+                        optimizer=optimizer,
+                        metrics=['accuracy'])
+        
+        # Add Checkpoint
+        checkpoint = ModelCheckpoint(f'model_{i}.h5', save_best_only=True)
+
+
+        # Training and validating the model
+        results = model.fit(x_train,
+                    y_train,
+                    batch_size=64,
+                    epochs=epochs,
+                    callbacks=[callback, checkpoint],
+                    validation_data=(x_valid, y_valid), verbose=True)
+        models.append(model)
+
+    final_predictions = np.array(ensemble_predictions(models, x_test))
+    # print(final_predictions)
+    norml_y_test = np.reshape(np.argmax(y_test, axis=1), (1, -1))
+    # print(norml_y_test)
+    # accuracy = accuracy_score(np.reshape(np.argmax(y_test, axis=1), (1, -1)), final_predictions)
+    accuracy = (np.sum(final_predictions == norml_y_test) / y_test.shape[0])
+    print(f"Ensemble accuracy: {accuracy:.2%}")
+    return accuracy
+
     if csv: 
         data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(results.history['val_accuracy'][-1])]]
-
         with open('testData.csv', "a") as file:
             writer = csv.writer(file)
             writer.writerows(data)
             print("write succeed")
 
-    for subject in range(9):
+    subject_score = subject_evaluate(model, x_test=x_test, y_test=y_test, person=person)
+
+    print("==== subjects =====")
+    print(subject_score)
+    print("===================")
+
+    return results.history['val_accuracy'][-1]
+
+
+def subject_evaluate(model, x_test, y_test, person, verbose=False):
+    '''
+    Evaluate the model on each 9 subjects
+    person contains subject label of each data in y_test
+    '''
+    subject_score = []
+    for subject in np.unique(person).tolist():
         condition = person[:,0] == subject
         subject_y_test = y_test[condition]
         subject_x_test = x_test[condition]
-        cnn_score = model.evaluate(subject_x_test, subject_y_test, verbose=True)  # TODO: delete this line before submitting
-        print(f'Test accuracy of the subject {subject}: {cnn_score[1]}')
+        cnn_score = model.evaluate(subject_x_test, subject_y_test, verbose=verbose)  # TODO: delete this line before submitting
+        subject_score.append(cnn_score[1])
+        if verbose: print(f'Test accuracy of the subject {subject}: {cnn_score[1]}')
 
-    return results.history['val_accuracy'][-1]
+    return subject_score
+
+
 
 def keras_cnn_transformer(args, csv=False):
 
