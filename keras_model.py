@@ -87,7 +87,7 @@ def cnn_model(num_cnn_layer=3, filters=25, input_shape=(250, 1, 22), num_classes
 
 
 def transformer_model(input_shape=(250, 1, 22), head_size=250, num_heads=2, 
-                ff_dim=500, num_transformer_blocks=4, mlp_units=[128], 
+                ff_dim=500, num_transformer_layers=4, mlp_units=[128], 
                 dropout=0.5, mlp_dropout=0.5,):
     '''
     Transformer Model
@@ -100,7 +100,7 @@ def transformer_model(input_shape=(250, 1, 22), head_size=250, num_heads=2,
     x = Reshape((-1, x.shape[-1]))(x)
     x = Permute((2, 1))(x)
 
-    for _ in range(num_transformer_blocks):
+    for _ in range(num_transformer_layers):
         x = transformer_encoder(x, head_size, num_heads, ff_dim, dropout)
 
     x = GlobalAveragePooling1D(data_format="channels_first")(x)
@@ -125,41 +125,6 @@ def cnn_layer(inputs, input_shape=None, filters=25, kernel_size=(10,1),
     x = BatchNormalization()(x)
     x = Dropout(dropout)(x)
     return x
-
-
-def CNN_model(time):
-    # Building the CNN model using sequential class
-    basic_cnn_model = Sequential()
-
-    # Conv. block 1
-    basic_cnn_model.add(Conv2D(filters=25, kernel_size=(10,1), padding='same', activation='elu', input_shape=(int(time/2),1,22)))
-    basic_cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same')) # Read the keras documentation
-    basic_cnn_model.add(BatchNormalization())
-    basic_cnn_model.add(Dropout(0.5))
-
-    # Conv. block 2
-    basic_cnn_model.add(Conv2D(filters=50, kernel_size=(10,1), padding='same', activation='elu'))
-    basic_cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
-    basic_cnn_model.add(BatchNormalization())
-    basic_cnn_model.add(Dropout(0.5))
-
-    # Conv. block 3
-    basic_cnn_model.add(Conv2D(filters=100, kernel_size=(10,1), padding='same', activation='elu'))
-    basic_cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
-    basic_cnn_model.add(BatchNormalization())
-    basic_cnn_model.add(Dropout(0.5))
-
-    # Conv. block 4
-    basic_cnn_model.add(Conv2D(filters=200, kernel_size=(10,1), padding='same', activation='elu'))
-    basic_cnn_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
-    basic_cnn_model.add(BatchNormalization())
-    basic_cnn_model.add(Dropout(0.5))
-
-    # Output layer with Softmax activation
-    basic_cnn_model.add(Flatten()) # Flattens the input
-    basic_cnn_model.add(Dense(4, activation='softmax')) # Output FC layer with softmax activation
-
-    return basic_cnn_model
 
 
 
@@ -228,52 +193,4 @@ def create_cnn_transformer_model(num_heads=2, input_shape=(250, 1, 22), num_clas
 
 
 
-
-def create_CNN_LSTM_model():
-    hybrid_cnn_lstm_model = Sequential()
-    # Conv. block 1
-    hybrid_cnn_lstm_model.add(Conv2D(filters=25, kernel_size=(10,1), padding='same', activation='elu', input_shape=(250,1,22)))
-    hybrid_cnn_lstm_model.add(MaxPooling2D(pool_size=(3,1), padding='same')) # Read the keras documentation
-    hybrid_cnn_lstm_model.add(BatchNormalization())
-    hybrid_cnn_lstm_model.add(Dropout(0.5))
-
-    # Conv. block 2
-    hybrid_cnn_lstm_model.add(Conv2D(filters=50, kernel_size=(10,1), padding='same', activation='elu'))
-    hybrid_cnn_lstm_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
-    hybrid_cnn_lstm_model.add(BatchNormalization())
-    hybrid_cnn_lstm_model.add(Dropout(0.5))
-
-    # Conv. block 3
-    hybrid_cnn_lstm_model.add(Conv2D(filters=100, kernel_size=(10,1), padding='same', activation='elu'))
-    hybrid_cnn_lstm_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
-    hybrid_cnn_lstm_model.add(BatchNormalization())
-    hybrid_cnn_lstm_model.add(Dropout(0.5))
-
-    # Conv. block 4
-    hybrid_cnn_lstm_model.add(Conv2D(filters=200, kernel_size=(10,1), padding='same', activation='elu'))
-    hybrid_cnn_lstm_model.add(MaxPooling2D(pool_size=(3,1), padding='same'))
-    hybrid_cnn_lstm_model.add(BatchNormalization())
-    hybrid_cnn_lstm_model.add(Dropout(0.5))
-
-    # FC+LSTM layers
-    hybrid_cnn_lstm_model.add(Flatten()) # Adding a flattening operation to the output of CNN block
-    hybrid_cnn_lstm_model.add(Dense((100))) # FC layer with 100 units
-    hybrid_cnn_lstm_model.add(Reshape((100,1))) # Reshape my output of FC layer so that it's compatible
-    
-    hybrid_cnn_lstm_model.add(GRU(256, return_sequences=True))
-
-    # The output of SimpleRNN will be a 2D tensor of shape (batch_size, 128)
-    hybrid_cnn_lstm_model.add(SimpleRNN(128))
-
-    hybrid_cnn_lstm_model.add(Dense(4, activation='softmax')) # Output FC layer with softmax activation
-    '''
-    hybrid_cnn_lstm_model.add(LSTM(10, dropout=0.6, recurrent_dropout=0.1, input_shape=(100,1), return_sequences=False))
-
-
-    # Output layer with Softmax activation 
-    hybrid_cnn_lstm_model.add(Dense(4, activation='softmax')) # Output FC layer with softmax activation
-    '''
-    # Printing the model summary
-    # hybrid_cnn_lstm_model.summary()
-    return hybrid_cnn_lstm_model
 

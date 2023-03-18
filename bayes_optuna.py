@@ -32,6 +32,9 @@ def keras_train(args, csv=False):
     model_type = args.model
     learning_rate = args.learning_rate
     epochs = args.epoch
+    time = args.time
+    cnn_layers = args.cnn_layers
+    transformer_layers = args.transformer_layers
     num_heads = args.num_heads         # Transformer
     patience = args.patience           # Early Stopping
     num_models = args.ensemble
@@ -44,15 +47,16 @@ def keras_train(args, csv=False):
     for i in range(num_models):
         # Sadly, it's Python3.9, which does not support Structural Pattern Matching
         if model_type == 'cnn+transformer':
-            model = cnn_transformer_model(num_cnn_layer=args.cnn_layers, filters=25, num_heads=num_heads)
+            model = cnn_transformer_model(input_shape=(int(time/2), 1, 22), num_cnn_layer=cnn_layers, filters=25, 
+                                          num_heads=num_heads, num_transformer_layer=transformer_layers)
         elif model_type == 'cnn+rnn':
-            model = cnn_rnn_model()
+            model = cnn_rnn_model(input_shape=(int(time/2), 1, 22), num_cnn_layer=cnn_layers)
         elif model_type == 'transformer':
-            model = transformer_model()
+            model = transformer_model(input_shape=(int(time/2), 1, 22), num_transformer_layers=transformer_layers)
         elif model_type == 'cnn':
-            model = cnn_model(num_cnn_layer=args.cnn_layers)
+            model = cnn_model(input_shape=(int(time/2), 1, 22), num_cnn_layer=cnn_layers)
         else:
-            model = cnn_transformer_model(num_cnn_layer=args.cnn_layers, filters=25, num_heads=num_heads)
+            model = cnn_transformer_model(input_shape=(int(time/2), 1, 22), num_cnn_layer=cnn_layers, filters=25, num_heads=num_heads)
 
         model.summary()
 
@@ -62,7 +66,7 @@ def keras_train(args, csv=False):
                         metrics=['accuracy'])
         
         # Add Callbacks: Checkpoint and EarlyStopping
-        checkpoint = ModelCheckpoint(f'model_{i}.h5', save_best_only=True)
+        checkpoint = ModelCheckpoint(f'models/{model_type}_{cnn_layers}_{time}_{i}.h5', save_best_only=True)
         callback = keras.callbacks.EarlyStopping(monitor='loss', patience=patience, restore_best_weights=True)
 
 
@@ -84,11 +88,11 @@ def keras_train(args, csv=False):
         # accuracy = accuracy_score(np.reshape(np.argmax(y_test, axis=1), (1, -1)), final_predictions)
         accuracy = (np.sum(final_predictions == norml_y_test) / y_test.shape[0])
         subject_score = ensemble_subject_evaluate(models, x_test=x_test, y_test=y_test, person=person)
-        print(f"Ensemble accuracy: {accuracy:.2%}")
+        print(f"Ensemble accuracy: {accuracy:.5%}")
     else:  # Single Model Accuracy
-        accuracy = model.evaluate(x_test, y_test, verbose=0)
+        accuracy = model.evaluate(x_test, y_test, verbose=0)[1]
         subject_score = subject_evaluate(model, x_test=x_test, y_test=y_test, person=person)
-        print(f"Model accuracy: {accuracy:.2%}")
+        print(f"Model accuracy: {accuracy:.5%}")
 
 
     if csv: 

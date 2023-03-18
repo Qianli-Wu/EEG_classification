@@ -2,7 +2,7 @@ import numpy as np
 import keras
 import matplotlib.pyplot as plt
 from keras.utils import to_categorical
-from keras_model import CNN_model, create_cnn_transformer_model, create_CNN_LSTM_model
+from keras_model import create_cnn_transformer_model, create_CNN_LSTM_model
 from data_preprocess import load_data
 from data_preprocess import data_prep
 
