@@ -24,9 +24,6 @@ def ensemble_predictions(models, X_test):
 
 def keras_train(args, csv=False):
 
-    print(f'learning_rate: {args.learning_rate}')
-    x_train, x_valid, x_test, y_train, y_valid, y_test, person = load_data(onehot=True)
-
 
     # Model parameters
     model_type = args.model
@@ -39,6 +36,8 @@ def keras_train(args, csv=False):
     patience = args.patience           # Early Stopping
     num_models = args.ensemble
     optimizer = keras.optimizers.Adam(lr=learning_rate)
+
+    x_train, x_valid, x_test, y_train, y_valid, y_test, person = load_data(time=time, onehot=True)
 
 
     models = []

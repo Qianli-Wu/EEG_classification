@@ -41,7 +41,7 @@ def data_prep(X,y,sub_sample,average,noise,time=500):
     # print('Shape of X after subsampling and concatenating:',total_X.shape)
     return total_X,total_y
 
-def load_data(debug = False, onehot=False):
+def load_data(time=500, debug=False, onehot=False):
 
     ## Loading the dataset
     X_test = np.load("X_test.npy")
@@ -74,9 +74,9 @@ def load_data(debug = False, onehot=False):
 
 
     ## Preprocessing the dataset
-    x_train,y_train = data_prep(X_train,y_train,2,2,True)
-    x_valid,y_valid = data_prep(X_valid,y_valid,2,2,True)
-    X_test_prep,y_test_prep = data_prep(X_test,y_test,2,2,True)
+    x_train,y_train = data_prep(X_train,y_train,2,2,True,time)
+    x_valid,y_valid = data_prep(X_valid,y_valid,2,2,True,time)
+    X_test_prep,y_test_prep = data_prep(X_test,y_test,2,2,True, time)
 
     if debug:
         print('Shape of training set:',x_train.shape)
