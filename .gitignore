@@ -4,3 +4,5 @@
 *.npy
 **/__pycache__/**
 *.csv
+*.h5
+*.xlsx

@@ -2,13 +2,13 @@ import numpy as np
 from keras.utils import to_categorical
 
 
-def data_prep(X,y,sub_sample,average,noise):
+def data_prep(X,y,sub_sample,average,noise,time=500):
     
     total_X = None
     total_y = None
     
     # Trimming the data (sample,22,1000) -> (sample,22,500)
-    X = X[:,:,0:500]
+    X = X[:,:,0:time]
     # print('Shape of X after trimming:',X.shape)
     
     # Maxpooling the data (sample,22,1000) -> (sample,22,500/sub_sample)
@@ -41,7 +41,7 @@ def data_prep(X,y,sub_sample,average,noise):
     # print('Shape of X after subsampling and concatenating:',total_X.shape)
     return total_X,total_y
 
-def load_data(debug = False, onehot=False):
+def load_data(time=500, debug=False, onehot=False):
 
     ## Loading the dataset
     X_test = np.load("X_test.npy")
@@ -74,9 +74,9 @@ def load_data(debug = False, onehot=False):
 
 
     ## Preprocessing the dataset
-    x_train,y_train = data_prep(X_train,y_train,2,2,True)
-    x_valid,y_valid = data_prep(X_valid,y_valid,2,2,True)
-    X_test_prep,y_test_prep = data_prep(X_test,y_test,2,2,True)
+    x_train,y_train = data_prep(X_train,y_train,2,2,True,time)
+    x_valid,y_valid = data_prep(X_valid,y_valid,2,2,True,time)
+    X_test_prep,y_test_prep = data_prep(X_test,y_test,2,2,True, time)
 
     if debug:
         print('Shape of training set:',x_train.shape)
@@ -119,6 +119,8 @@ def load_data(debug = False, onehot=False):
         print('Shape of validation set after dimension reshaping:',x_valid.shape)
         print('Shape of test set after dimension reshaping:',x_test.shape)
 
-    return x_train, x_valid, x_test, y_train, y_valid, y_test
+    person = np.vstack((person_test,person_test, person_test,person_test))
+
+    return x_train, x_valid, x_test, y_train, y_valid, y_test, person
 
 
