@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default=model)
-    parser.add_argument('--runs', type=int, default=1)
+    # parser.add_argument('--runs', type=int, default=1)
     parser.add_argument('--epoch', type=int, default=epochs)
     parser.add_argument('--learning_rate', type=float, default=learning_rate)
     parser.add_argument('--time', type=int, default=500)
@@ -33,13 +33,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    acc = []
-    runs = args.runs
-    for i in range(runs):
-        acc.append(keras_train(args))
-
-    print(acc)
-    print(np.mean(acc))
+    keras_train(args)
+    
+    
 
     # # open file to store the data
     # header = ["Dataset", "Run", "Epoch", "Learning_Rate"]

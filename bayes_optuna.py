@@ -23,7 +23,11 @@ def ensemble_predictions(models, X_test):
     return final_predictions
 
 def keras_train(args, csv=False):
-
+    '''
+    Trains various deep learning models (CNN, Transformer, CNN+Transformer, and CNN+RNN) using Keras. 
+    It supports ensemble training, early stopping, and model checkpointing. 
+    The models are trained and validated using provided EEG data, split into training, validation, and testing sets.
+    '''
 
     # Model parameters
     model_type = args.model
@@ -32,9 +36,9 @@ def keras_train(args, csv=False):
     time = args.time
     cnn_layers = args.cnn_layers
     transformer_layers = args.transformer_layers
-    num_heads = args.num_heads         # Transformer
+    num_heads = args.num_heads         # Transformer Only
     patience = args.patience           # Early Stopping
-    num_models = args.ensemble
+    num_models = args.ensemble         # Model Ensembling
     optimizer = keras.optimizers.Adam(lr=learning_rate)
 
     x_train, x_valid, x_test, y_train, y_valid, y_test, person = load_data(time=time, onehot=True)
@@ -124,6 +128,7 @@ def subject_evaluate(model, x_test, y_test, person, verbose=False):
 
     return subject_score
 
+
 def ensemble_subject_evaluate(models, x_test, y_test, person, verbose=False):
     '''
     Evaluate the ensembling models on each 9 subjects
@@ -143,49 +148,6 @@ def ensemble_subject_evaluate(models, x_test, y_test, person, verbose=False):
     return subject_score
 
 
-
-def keras_cnn_transformer(args, csv=False):
-
-    print(f'learning_rate: {args.learning_rate}')
-    x_train, x_valid, x_test, y_train, y_valid, y_test = load_data(onehot=True)
-
-
-    # Model parameters
-    learning_rate = args.learning_rate
-    epochs = args.epoch
-    num_heads = args.num_heads
-    hybrid_cnn_transformer_optimizer = keras.optimizers.Adam(lr=learning_rate)
-
-    hybird_cnn_transformer_model = create_cnn_transformer_model(num_heads=num_heads)
-    # Print the model summary
-    hybird_cnn_transformer_model.summary()
-
-
-    # Compiling the model
-    hybird_cnn_transformer_model.compile(loss='categorical_crossentropy',
-                    optimizer=hybrid_cnn_transformer_optimizer,
-                    metrics=['accuracy'])
-
-    # Training and validating the model
-    hybrid_cnn_transformer_model_results = hybird_cnn_transformer_model.fit(x_train,
-                y_train,
-                batch_size=64,
-                epochs=epochs,
-                validation_data=(x_valid, y_valid), verbose=True)
-
-    if csv:
-        data = [["EEG", str(args.runs), str(args.epoch), str(args.learning_rate), str(hybrid_cnn_transformer_model_results.history['val_accuracy'][-1])]]
-
-        with open('testData.csv', "a") as file:
-            writer = csv.writer(file)
-            writer.writerows(data)
-            print("write succeed")
-
-    cnn_score = hybird_cnn_transformer_model.evaluate(x_test, y_test, verbose=0)  # TODO: delete this line before submitting
-    print('Test accuracy of the CNN + Transformer model:',cnn_score[1])
-
-    return hybrid_cnn_transformer_model_results.history['val_accuracy'][-1]
-
 def optuna_objective(trail):
 
     epochs = trail.suggest_int("epochs", 45, 55, 5)
@@ -202,29 +164,24 @@ def optuna_objective(trail):
     return val_accuracy
 
 def optimizer_optuna(n_trials, algo):
-    # 定义使用TPE或者GP
+    # Define using TDP or GP
     if algo == "TPE":
         algo = optuna.samplers.TPESampler(n_startup_trials=10, n_ei_candidates=24)
     # elif algo == "GP":
     #     from optuna.integration import SkoptSampler
     #     import skopt
-    #     algo = SkoptSampler(skopt_kwargs={'base_estimator': 'GP',  # 选择高斯过程
-    #                                       'n_initial_points': 10,  # 初始观测点10个
-    #                                       'acq_func': 'EI'})  # 选择的采集函数为EI，期望增量
+    #     algo = SkoptSampler(skopt_kwargs={'base_estimator': 'GP',  # Gaussian Process
+    #                                       'n_initial_points': 10,  # 10 initial points
+    #                                       'acq_func': 'EI'})  # aqucition function
 
-    # 实际优化过程，首先实例化优化器
-    study = optuna.create_study(sampler=algo  # 要使用的具体算法
-                                , direction="minimize"  # 优化的方向，可以填写minimize或maximize
-                                )
-    # 开始优化，n_trials为允许的最大迭代次数
-    # 由于参数空间已经在目标函数中定义好，因此不需要输入参数空间
-    study.optimize(optuna_objective  # 目标函数
-                   , n_trials=n_trials  # 最大迭代次数（包括最初的观测值的）
-                   , show_progress_bar=True  # 要不要展示进度条呀？
-                   )
+    # Create an instance for optimizer
+    study = optuna.create_study(sampler=algo  , direction="minimize")
+    # Start to optimize
+    study.optimize(optuna_objective  # objective function
+                   , n_trials=n_trials  # max number of trails
+                   , show_progress_bar=True)
 
-    # 可直接从优化好的对象study中调用优化的结果
-    # 打印最佳参数与最佳损失值
+
     print("\n", "\n", "best params: ", study.best_trial.params,
           "\n", "\n", "best score: ", study.best_trial.values,
           "\n")
