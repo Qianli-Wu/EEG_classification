@@ -38,9 +38,9 @@ $ python main.py --model=cnn+transformer --epoch=200 --learning_rate=4e-4 --num_
 * transformer requires similar complexity per layer but less Sequential Operations than RNNs and smaller Max Path Length than RNNs and CNNs
 
 ## Reference
-> ![Keras](https://keras.io)
+> [Keras](https://keras.io)
 
-> ![BCI Competition 2008 – Graz data set A](https://www.bbci.de/competition/iv/desc_2a.pdf)
+> [BCI Competition 2008 – Graz data set A](https://www.bbci.de/competition/iv/desc_2a.pdf)
 
 > `CNN with data processing.ipynb`
 
