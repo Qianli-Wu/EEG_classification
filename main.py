@@ -10,40 +10,25 @@ from bayes_optuna import optimizer_optuna, keras_cnn_transformer, keras_train
 
 if __name__ == "__main__":
 
-    epochs = 200
     learning_rate = 4e-4
-    num_heads = 2
-    patience = 10
     model='cnn+transformer'
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default=model)
-    # parser.add_argument('--runs', type=int, default=1)
-    parser.add_argument('--epoch', type=int, default=epochs)
-    parser.add_argument('--learning_rate', type=float, default=learning_rate)
-    parser.add_argument('--time', type=int, default=500)
-    parser.add_argument('--num_heads', type=int, default=num_heads)
-    parser.add_argument('--patience', type=int, default=patience)
+    parser.add_argument('--model', type=str, default=model, help='Model type to train (e.g. cnn+transformer, cnn, transformer)')
+    parser.add_argument('--epoch', type=int, default=200, help='Number of training epochs')
+    parser.add_argument('--learning_rate', type=float, default=learning_rate, help='Learning rate for the optimizer')
+    parser.add_argument('--time', type=int, default=500, help='Length of the input time-series data')
+    parser.add_argument('--num_heads', type=int, default=2, help='Number of attention heads in the Transformer model')
+    parser.add_argument('--patience', type=int, default=10, help='Patience for EarlyStopping during training')
 
-    parser.add_argument('--cnn_layers', type=int, default=3)
-    parser.add_argument('--transformer_layers', type=int, default=1)
-    parser.add_argument('--ensemble', type=int, default=3)
+    parser.add_argument('--cnn_layers', type=int, default=3, help='Number of CNN layers')
+    parser.add_argument('--transformer_layers', type=int, default=1, help='Number of Transformer layers')
+    parser.add_argument('--ensemble', type=int, default=3, help='Number of models to train for ensemble learning')
 
 
 
     args = parser.parse_args()
 
     keras_train(args)
-    
-    
-
-    # # open file to store the data
-    # header = ["Dataset", "Run", "Epoch", "Learning_Rate"]
-    # with open("testData.csv", "w") as file:
-    #     writer = csv.writer(file)
-    #     writer.writerow(header)
-
-    # best_params, best_score = optimizer_optuna(10, "TPE")
-    # print(best_params, best_score)
 
 

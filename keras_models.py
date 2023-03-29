@@ -117,6 +117,25 @@ def transformer_model(input_shape=(250, 1, 22), head_size=250, num_heads=2,
 def cnn_layer(inputs, input_shape=None, filters=25, kernel_size=(10,1), 
               padding='same', activation='elu', pool_pool_size=(3,1), 
               pool_padding='same', dropout=0.5):
+    '''
+    This function defines a single CNN layer for a 2D convolutional neural network. 
+    The function applies a 2D convolution, followed by max pooling, batch normalization, and dropout. 
+    The layer can be used as a building block for creating more complex CNN architectures.
+
+    Parameters:
+        inputs: The input tensor for the CNN layer
+        input_shape (optional): The shape of the input tensor, required for the first layer of the model
+        filters (optional): The number of filters in the 2D convolution
+        kernel_size (optional): The size of the convolution kernel
+        padding (optional): The type of padding applied to the input tensor during convolution
+        activation (optional): The activation function applied after the convolution
+        pool_pool_size (optional): The size of the max pooling window
+        pool_padding (optional): The type of padding applied during max pooling
+        dropout (optional): The dropout rate applied after batch normalization
+
+    Returns:
+        x: The output tensor after applying the CNN layer operations
+    '''
     if input_shape is None:
         x = Conv2D(filters=filters, kernel_size=kernel_size, padding=padding, activation=activation)(inputs)
     else:
@@ -129,6 +148,21 @@ def cnn_layer(inputs, input_shape=None, filters=25, kernel_size=(10,1),
 
 
 def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
+    '''
+    This function defines a Transformer encoder layer, which applies multi-head self-attention, 
+    layer normalization, and a feed-forward neural network. 
+    It can be used as a building block for creating complex Transformer architectures.
+
+    Parameters:
+        inputs: Input tensor
+        head_size: Dimensionality of the attention head
+        num_heads: Number of attention heads
+        ff_dim: Hidden layer size in the feed-forward network
+        dropout (optional): Dropout rate
+
+    Returns:
+        x: Output tensor after applying the Transformer encoder layer operations
+    '''
     # Attention and Normalization
     x = MultiHeadAttention(
         key_dim=head_size, num_heads=num_heads, dropout=dropout
@@ -143,54 +177,5 @@ def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
     x = Conv1D(filters=inputs.shape[-1], kernel_size=1)(x)
     x = LayerNormalization(epsilon=1e-6)(x)
     return x + res
-
-
-# ===================
-# NOT USED ANYMORE
-# ===================
-# Define the model
-def create_cnn_transformer_model(num_heads=2, input_shape=(250, 1, 22), num_classes=4, ff_dim=500, dropout=0.5, time=500):
-    inputs = keras.Input(shape=input_shape)
-
-    # CNN layer 1
-    x = Conv2D(filters=25, kernel_size=(10,1), padding='same', activation='elu', input_shape=(int(time/2),1,22))(inputs)
-    x = MaxPooling2D(pool_size=(3,1), padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.5)(x)
-
-    # CNN layer 2
-    x = Conv2D(filters=50, kernel_size=(10,1), padding='same', activation='elu')(x)
-    x = MaxPooling2D(pool_size=(3,1), padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.5)(x)
-
-
-    # # CNN layer 3
-    # x = Conv2D(filters=100, kernel_size=(10,1), padding='same', activation='elu')(x)
-    # x = MaxPooling2D(pool_size=(3,1), padding='same')(x)
-    # x = BatchNormalization()(x)
-    # x = Dropout(0.5)(x)
-
-
-    # # CNN layer 4
-    # x = Conv2D(filters=200, kernel_size=(10,1), padding='same', activation='elu')(x)
-    # x = MaxPooling2D(pool_size=(3,1), padding='same')(x)
-    # x = BatchNormalization()(x)
-    # x = Dropout(0.5)(x)
-
-
-    # Prepare the data for the Transformer
-    x = Reshape((-1, x.shape[-1]))(x)
-    x = Permute((2, 1))(x)
-
-    # Transformer layer 1
-    d_model = x.shape[-1]
-    x = transformer_encoder(x, d_model, num_heads, ff_dim, dropout)
-    x = Flatten()(x)
-    outputs = Dense(num_classes, activation='softmax')(x)
-
-    return models.Model(inputs=inputs, outputs=outputs)
-
-
 
 

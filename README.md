@@ -1,5 +1,5 @@
 # EEG_classification
-The final project for ECE C147/C247. This project evaluates CNN + Transformer and CNN + LSTM on EEG dataset. The goal is to classify the movement of the subjects by 22 channels of EEG electrodes. 
+This repository contains the final project for ECE C147/C247, which evaluates the performance of CNN + Transformer and CNN + GRU + SimpleRNN models on an EEG dataset. The objective is to classify subjects' movements using 22 channels of EEG electrode data. The repo focuses on providing the model architectures used in the project. Please note that the dataset and the project write-up are not included in this repository.
 
 
 ## Requirements
@@ -38,8 +38,9 @@ $ python main.py --model=cnn+transformer --epoch=200 --learning_rate=4e-4 --num_
 * transformer requires similar complexity per layer but less Sequential Operations than RNNs and smaller Max Path Length than RNNs and CNNs
 
 ## Reference
+> ![Keras](https://keras.io)
+
+> ![BCI Competition 2008 – Graz data set A](https://www.bbci.de/competition/iv/desc_2a.pdf)
+
 > `CNN with data processing.ipynb`
 
-> `CNN-LSTM Hybird with data processing.ipynb`
-
-> keras
